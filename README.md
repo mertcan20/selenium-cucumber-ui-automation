@@ -1,56 +1,55 @@
-# Selenium / Cucumber UI automation
+# Selenium UI Test Otomasyonu
 
-Java 17+, Maven 3.9+, Selenium, Cucumber and JUnit. AI-assisted portfolio refresh of an existing N11 exercise.
-The aim is explainable test design, independent scenarios, useful failure evidence and a build that fails on errors.
-This repository is not evidence of production N11 employment or of the author's assessed seniority.
+Java, Selenium, Cucumber, JUnit ve Maven ile hazırlanmış web test projesi.
 
-## Run
+## Projede ne var?
 
-From this directory, with Chrome installed:
+| Akış | Ne yapar? |
+| --- | --- |
+| Yerel testler | Bilgisayarda açılan örnek mağazada giriş, sepet, miktar, stok ve sipariş kontrollerini çalıştırır. N11'e bağlanmaz. |
+| N11 kayıt → giriş | Yeni kullanıcının kayıt formunu doldurur. Sen kayıt/doğrulama adımlarını tamamlayınca temiz tarayıcıda aynı hesapla giriş yapar. |
 
-```sh
-mvn -B clean verify
-mvn -B '-Dcucumber.filter.tags=@local and @smoke' test
-mvn -B '-Dcucumber.execution.dry-run=true' '-Dcucumber.filter.tags=@local or @external' test
+**Durum:** Yereldeki 10 test geçti; [ilk GitHub Actions koşumu da başarılı](https://github.com/mertcan20/selenium-cucumber-ui-automation/actions/runs/39491585591). Canlı N11 kayıt → giriş akışı henüz uçtan uca doğrulanmadı.
+
+## Yerel testleri çalıştırma
+
+Java JDK 17 veya üzeri, Maven ve Chrome gerekli. IntelliJ'de `pom.xml` bulunan proje klasörünü aç. Terminalde:
+
+```text
+mvn clean verify
 ```
 
-`mvn clean verify` runs nine local Cucumber scenarios plus one registration/login page-object check in headless Chrome (ten tests total). The HTTP fixtures bind loopback only, on free ports.
-Selenium Manager may download a matching driver on first use. A full JDK is required (`jdk.httpserver`).
-Overrides: `-Dbrowser=edge`, `-Dbrowser=firefox`, `-Dheadless=false`.
-No implicit waits, automatic scenario retries, or hidden failure-ignore flags are used.
+Bu komut 9 mağaza senaryosu ve 1 yerel kayıt/giriş kontrolünü çalıştırır. Tarayıcı arka planda çalışır.
 
-## Evidence and scope
+## N11 kayıt → giriş akışını çalıştırma
 
-| Layer | Coverage | What it does not prove |
-|---|---|---|
-| Local real-browser regression | Valid/invalid/missing login input, cart amount/removal, zero/negative/over-stock quantity, stock/order changes and empty repeat checkout | Real authentication, payment, server idempotency, production security |
-| N11 external login | Original page object and login steps; parser and step binding repaired | Live site compatibility until run with an authorized test account |
+IntelliJ terminalin **Windows CMD** ise aşağıdaki örnek değerleri kendi test bilgilerinle değiştir:
 
-Reports: `target/cucumber-reports.html`, `target/cucumber.json`, `target/cucumber.xml`, `target/surefire-reports/`.
-Failed browser scenarios attach screenshots. Capture errors cannot prevent browser/server cleanup.
-The local fixture has public dummy credentials; it deliberately has no production authentication backend.
-
-## N11 opt-in
-
-Supply `N11_USERNAME` and `N11_PASSWORD` as environment variables, then:
-
-```sh
-mvn -B '-Dtest=runner.TestRunner' '-Dcucumber.filter.tags=@login' test
+```bat
+set "N11_REGISTER_FIRST_NAME=ADIN"
+set "N11_REGISTER_LAST_NAME=SOYADIN"
+set "N11_REGISTER_EMAIL=SANA_AIT_YENI_EPOSTA"
+set "N11_REGISTER_PHONE=SANA_AIT_TELEFON"
+set "N11_REGISTER_PASSWORD=TEST_SIFREN"
+mvn -Dtest=runner.TestRunner -Dcucumber.filter.tags=@register-login -Dheadless=false test
 ```
 
-No account values are committed. External login is excluded from default/CI execution.
-Only run it with a permitted test account. CAPTCHA, changed selectors and site protections may block execution.
-The new register → same-account login journey is described in [REGISTER-LOGIN.md](docs/REGISTER-LOGIN.md). It fills registration fields, waits for operator consent/submission/verification, then logs in with the same credentials in a fresh browser. Use `@register-login` and visible browser mode. Live registration is not yet validated. Product-add remains a backlog item.
-The original repository exposed account values: if real, rotate them; removing them from a new version does not remove Git history.
+E-posta yeni üyelik için kullanılabilir olmalı; telefona erişebilmelisin. Şifre, N11 formundaki kurallara uymalı.
 
-## Structure
+Tarayıcı açıldığında script kayıt formunu doldurur. **Üyelik sözleşmesi, Üye Ol gönderimi ve varsa SMS/CAPTCHA adımlarını sen tamamlarsın.** Script en fazla 180 saniye kayıt oturumunun açılmasını bekler. Sonra tarayıcıyı kapatıp yeni tarayıcıda aynı bilgilerle giriş yapar. Oluşturulan hesap otomatik silinmez.
 
-- `features/`: behaviour and expected outcomes.
-- `pages/`: browser interactions and explicit waits.
-- `stepdefinitions/`: business steps and assertions.
-- `support/LocalSite.java` and `site/index.html`: controlled fixture, reset per scenario.
-- `.github/workflows/tests.yml`: proposed standalone repository CI; report upload runs even after failures.
-- `docs/`: risks, known limitations and interview walkthrough.
+PowerShell kullanıyorsan ortam değişkeni örnekleri ve ayrıntılar: [Kayıt → giriş rehberi](docs/REGISTER-LOGIN.md).
 
-CI configuration is supplied, but no GitHub run is claimed until it has actually been published and executed.
-Versions remain pinned; passing functional tests is not a dependency vulnerability audit.
+## Kodları hangi sırayla okuyayım?
+
+1. [N11RegisterLogin.feature](src/test/resources/features/N11RegisterLogin.feature) — senaryonun adımları.
+2. [N11RegistrationSteps.java](src/test/java/stepdefinitions/N11RegistrationSteps.java) — adımların Java karşılıkları ve aynı hesabın yeniden kullanılması.
+3. [N11RegistrationPage.java](src/test/java/pages/N11RegistrationPage.java) — kayıt alanlarını doldurma.
+4. [N11Page.java](src/test/java/pages/N11Page.java) — giriş işlemleri ve oturum kontrolü.
+
+## Sonuçları nerede göreceğim?
+
+- Cucumber senaryoları: `target/cucumber-reports.html`
+- Bütün testlerin sonuçları: `target/surefire-reports/`
+- GitHub koşumları: [Actions](https://github.com/mertcan20/selenium-cucumber-ui-automation/actions)
+- Kapsam ve bilinen eksikler: [Test stratejisi](docs/TEST-STRATEGY.md)
