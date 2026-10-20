@@ -1,12 +1,13 @@
 package pages;
 
-import io.cucumber.java.de.Wenn;
-import org.checkerframework.checker.signature.qual.FieldDescriptor;
 import org.openqa.selenium.WebElement;
+import org.openqa.selenium.By;
+import org.openqa.selenium.interactions.Actions;
+import org.openqa.selenium.support.ui.WebDriverWait;
+import java.time.Duration;
 import org.openqa.selenium.support.FindBy;
 import org.openqa.selenium.support.PageFactory;
 import utilities.Driver;
-import utilities.ElementUtils;
 import utilities.WaitUtils;
 
 public class N11Page {
@@ -54,7 +55,7 @@ public class N11Page {
     @FindBy(id = "password")
     private WebElement passwordInput;
 
-    @FindBy(id = "loginButton")
+    @FindBy(css = "button[aria-label='Giriş Yap'], #loginButton")
     private WebElement loginButton;
 
     @FindBy(css = "a[title='Hesabım']")
@@ -73,12 +74,16 @@ public class N11Page {
     }
 
     public void enterPassword(String password) {
+        // Current public login first asks for email, then reveals the password stage.
+        boolean passwordVisible = Driver.getDriver().findElements(By.id("password"))
+            .stream().anyMatch(WebElement::isDisplayed);
+        if (!passwordVisible) clickLoginButton();
         WaitUtils.waitForVisibility(passwordInput, 10).clear();
         passwordInput.sendKeys(password);
     }
 
     public void clickLoginButton() {
-        ElementUtils.clickWithRetry(loginButton, 5);
+        WaitUtils.waitForClickability(loginButton, 10).click();
     }
 
     public WebElement getMyAccountButton() {
@@ -87,6 +92,16 @@ public class N11Page {
 
     public boolean isLogoutButtonDisplayed() {
         return WaitUtils.waitForVisibility(logoutButton, 10).isDisplayed();
+    }
+
+    public void waitForAuthenticatedAccount(Duration timeout) {
+        new WebDriverWait(Driver.getDriver(), timeout).until(driver -> {
+            var accounts = driver.findElements(By.cssSelector("a[title='Hesabım']"));
+            if (accounts.isEmpty() || !accounts.get(0).isDisplayed()) return false;
+            new Actions(driver).moveToElement(accounts.get(0)).perform();
+            return driver.findElements(By.cssSelector("a[title='Çıkış Yap']"))
+                .stream().anyMatch(WebElement::isDisplayed);
+        });
     }
 }
 

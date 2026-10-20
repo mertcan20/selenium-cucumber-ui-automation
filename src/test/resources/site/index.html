@@ -1,0 +1,32 @@
+<!doctype html><html lang="en"><meta charset="utf-8"><title>QA practice shop</title>
+<h1>QA practice shop — local test fixture</h1>
+<form id="login" novalidate>
+<label>Email <input id="email" type="email"></label>
+<label>Password <input id="password" type="password"></label>
+<button id="sign-in">Sign in</button><p id="error" role="alert"></p></form>
+<section id="shop" hidden><p id="welcome">Welcome, Demo</p>
+<p>Notebook — 25.00 TRY</p><p>Stock: <span id="stock">2</span></p>
+<label>Quantity <input id="quantity" type="number" value="1"></label>
+<button id="add">Add to cart</button><button id="remove">Remove</button>
+<p>Cart: <span id="cart">0</span></p><p>Total: <span id="total">0.00</span> TRY</p>
+<button id="checkout">Pay</button><p id="notice" role="status"></p>
+<p>Orders: <span id="orders">0</span></p></section>
+<script>
+// Public fixture credentials, not account secrets. State resets on every navigation.
+let stock=2, cart=0, orders=0;
+const el=id=>document.getElementById(id);
+const render=()=>{el('stock').textContent=stock;el('cart').textContent=cart;
+  el('total').textContent=(cart*25).toFixed(2);el('orders').textContent=orders;};
+el('login').onsubmit=e=>{e.preventDefault();
+  if(!el('email').value || !el('password').value) {el('error').textContent='Email and password are required';return;}
+  if(el('email').value!=='demo@example.test'||el('password').value!=='demo-pass') {
+    el('error').textContent='Invalid credentials';return;}
+  el('login').hidden=true;el('shop').hidden=false;};
+el('add').onclick=()=>{const quantity=Number(el('quantity').value);
+  if(!Number.isInteger(quantity)||quantity<1){el('notice').textContent='Quantity must be a positive integer';return;}
+  if(cart+quantity>stock){el('notice').textContent='Insufficient stock';return;}
+  cart+=quantity;el('notice').textContent='Added';render();};
+el('remove').onclick=()=>{cart=0;el('notice').textContent='Cart cleared';render();};
+el('checkout').onclick=()=>{if(cart===0){el('notice').textContent='Cart is empty';return;}
+  stock-=cart;cart=0;orders++;el('notice').textContent='Order created';render();};
+</script></html>

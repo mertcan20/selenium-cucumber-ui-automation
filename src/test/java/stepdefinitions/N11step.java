@@ -43,7 +43,7 @@ public class N11step {
         Assert.assertEquals(expectedUrl, actualUrl);
     }
 
-    @And("Kullanıcı giriş sayfasında geçerli bir kullanıcı adı  girer.")
+    @And("Kullanıcı giriş sayfasında geçerli bir kullanıcı adı girer.")
     public void kullaniciGirisSayfasindaGecerliBirKullaniciAdiGirer() {
         n11Page.enterEmail(ConfigReader.getProperty("username"));
     }

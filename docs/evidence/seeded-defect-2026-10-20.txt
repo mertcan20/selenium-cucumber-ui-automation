@@ -1,0 +1,10 @@
+-------------------------------------------------------------------------------
+Test set: runner.TestRunner
+-------------------------------------------------------------------------------
+Tests run: 1, Failures: 1, Errors: 0, Skipped: 0, Time elapsed: 1.745 s <<< FAILURE! -- in runner.TestRunner
+Controlled shop regression.Cart total and removal -- Time elapsed: 1.346 s <<< FAILURE!
+org.junit.ComparisonFailure: expected:<5[0].00> but was:<5[2].00>
+	at org.junit.Assert.assertEquals(Assert.java:117)
+	at org.junit.Assert.assertEquals(Assert.java:146)
+	at stepdefinitions.PracticeShopSteps.cart(PracticeShopSteps.java:26)
+	at ✽.the cart has 2 items and total "50.00"(classpath:features/LocalShop.feature:25)
